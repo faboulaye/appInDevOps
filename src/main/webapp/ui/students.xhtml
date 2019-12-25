@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+                xmlns:h="http://xmlns.jcp.org/jsf/html"
+                xmlns:f="http://xmlns.jcp.org/jsf/core"
+                xmlns:p="http://primefaces.org/ui">
+    <h:doctype rootElement="html"/>
+    <html>
+    <f:view contentType="text/html" encoding="UTF-8">
+        <h:head>
+            <f:facet name="first">
+                <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+                <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1"/>
+                <title>DevOps Apps Tutorial</title>
+            </f:facet>
+        </h:head>
+        <h:body>
+            <f:facet name="last">
+                <h:outputStylesheet library="default" name="css/style.css"/>
+                <h:outputStylesheet library="primefaces" name="primeicons/primeicons.css"/>
+            </f:facet>
+
+            <p:outputPanel>
+                <p:outputPanel styleClass="ui-g-12">
+                    <p:outputPanel>
+                        <h:outputText value="DevOps App Tutorial"/>
+                    </p:outputPanel>
+                </p:outputPanel>
+                <h:form id="studentForm">
+                    <p:outputPanel styleClass="psStudentsPnl">
+                        <p:messages id="messages" closable="true">
+                            <p:autoUpdate />
+                        </p:messages>
+                        <p:dataTable id="studentsTbl" var="student" value="#{studentHandler.students}"
+                                     styleClass="table-hover"
+                                     widgetVar="wStudentTbl" rendered="#{studentHandler.student == null}">
+                            <f:facet name="header">
+                                <p:outputPanel styleClass="right">
+                                    <p:commandButton icon="pi pi-plus" styleClass="btn btn-sm btn-success"
+                                                     process="@this" update="@(.psStudentsPnl)"
+                                                     action="#{studentHandler.onCreate()}"
+                                                     value="Ajouter"/>
+                                </p:outputPanel>
+                            </f:facet>
+                            <p:column headerText="Prénom">
+                                <h:outputText value="#{student.firstName}"/>
+                            </p:column>
+                            <p:column headerText="Nom">
+                                <h:outputText value="#{student.lastName}"/>
+                            </p:column>
+                            <p:column headerText="Email">
+                                <h:outputText value="#{student.email}"/>
+                            </p:column>
+                            <p:column headerText="Département">
+                                <h:outputText value="#{student.department}"/>
+                            </p:column>
+                            <p:column headerText="Date d'inscription">
+                                <h:outputText value="#{student.creationDate}"/>
+                            </p:column>
+                            <p:column style="text-align: center">
+                                <p:commandLink id="actions" styleClass="pi pi-ellipsis-h"
+                                               icon="pi pi-ellipsis-h" type="button"/>
+                                <p:tieredMenu id="globalMenu" overlay="true" trigger="actions" my="left top"
+                                              at="left bottom">
+                                    <p:menuitem icon="pi pi-trash" value="Supprimer"
+                                                action="#{studentHandler.onDelete(student)}"
+                                                process="@this" update="@(.psStudentsPnl)">
+                                        <p:confirm header="Confirmation"
+                                                   message="Etes-vous sure de vouloir supprimer?"
+                                                   icon="pi pi-exclamation-triangle"/>
+                                    </p:menuitem>
+                                    <p:menuitem icon="pi pi-pencil" value="Modifier"
+                                                action="#{studentHandler.onUpdate(student)}"
+                                                process="@this" update="@(.psStudentsPnl)"/>
+                                </p:tieredMenu>
+                            </p:column>
+                        </p:dataTable>
+                        <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                            <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes"
+                                             icon="pi pi-check"/>
+                            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no"
+                                             icon="pi pi-times"/>
+                        </p:confirmDialog>
+                        <p:panel styleClass="psStudentPnl"
+                                 rendered="#{studentHandler.student != null}">
+                            <f:facet name="header">
+                                <p:outputPanel styleClass="lead">
+                                    <h:outputText
+                                            value="Information sur l'étudiant: #{studentHandler.student.fullName}"/>
+                                </p:outputPanel>
+                            </f:facet>
+                            <p:outputPanel styleClass="ui-inputgroup">
+                                <p:outputPanel styleClass="ui-g-4">
+                                    <h:outputLabel for="firstName">Prénom</h:outputLabel>
+                                </p:outputPanel>
+                                <p:outputPanel styleClass="ui-g-8">
+                                    <p:inputText id="firstName" placeholder="Prénom" required="true" label="Prénom"
+                                                 value="#{studentHandler.student.firstName}"/>
+                                </p:outputPanel>
+                            </p:outputPanel>
+                            <p:outputPanel styleClass="ui-inputgroup">
+                                <p:outputPanel styleClass="ui-g-4">
+                                    <h:outputLabel for="lastName">Nom</h:outputLabel>
+                                </p:outputPanel>
+                                <p:outputPanel styleClass="ui-g-8">
+                                    <p:inputText id="lastName" placeholder="Nom" required="true" label="Nom"
+                                                 value="#{studentHandler.student.lastName}"/>
+                                </p:outputPanel>
+                            </p:outputPanel>
+                            <p:outputPanel styleClass="ui-inputgroup">
+                                <p:outputPanel styleClass="ui-g-4">
+                                    <h:outputLabel for="studentEmail">Email</h:outputLabel>
+                                </p:outputPanel>
+                                <p:outputPanel styleClass="ui-g-8">
+                                    <p:inputText id="studentEmail" placeholder="Email" required="true" label="Email"
+                                                 value="#{studentHandler.student.email}"/>
+                                </p:outputPanel>
+                            </p:outputPanel>
+                            <p:outputPanel styleClass="ui-inputgroup">
+                                <p:outputPanel styleClass="ui-g-4">
+                                    <h:outputLabel for="studentDepartment">Département</h:outputLabel>
+                                </p:outputPanel>
+                                <p:outputPanel styleClass="ui-g-8">
+                                    <p:inputText id="studentDepartment"
+                                                 placeholder="Département" required="true" label="Département"
+                                                 value="#{studentHandler.student.department}"/>
+                                </p:outputPanel>
+                            </p:outputPanel>
+                            <f:facet name="footer">
+                                <p:outputPanel styleClass="right">
+                                    <p:commandButton icon="pi pi-times"
+                                                     process="@this" update="@(.psStudentsPnl)"
+                                                     action="#{studentHandler.onCancel()}"
+                                                     value="Annuler"/>
+                                    <p:commandButton icon="pi pi-save"
+                                                     process="@(.psStudentPnl)" update="@(.psStudentsPnl)"
+                                                     action="#{studentHandler.onSave()}"
+                                                     value="Sauvegarder"/>
+                                </p:outputPanel>
+                            </f:facet>
+                        </p:panel>
+                    </p:outputPanel>
+                </h:form>
+            </p:outputPanel>
+        </h:body>
+    </f:view>
+    </html>
+</ui:composition>

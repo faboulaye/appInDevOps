@@ -1,0 +1,1 @@
+INSERT INTO STUDENT (ID, FIRST_NAME, LAST_NAME, EMAIL, DEPARTMENT, CREATION_DATE) VALUES (121, 'John', 'Doe', 'john.doe@email.com', 'Mathematique', TODAY),(122, 'Michel', 'Dupont', 'michel.dupont@email.com', 'Informatique', TODAY);

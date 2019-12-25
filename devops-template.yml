@@ -1,0 +1,202 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template for CI/CD
+
+Parameters:
+
+  AMIId:
+    Description: AMI Id
+    Type: String
+    Default: ami-01f14919ba412de34
+
+  VPCId:
+    Description: VPC Id
+    Type: String
+
+  DevOpsSubnetId:
+    Description: Jenkins subnet Id
+    Type: String
+
+  WebAppSubnetId:
+    Description: Web apps subnet Id
+    Type: String
+
+  SSHSecurityGroupId:
+    Description: SSH Secuirty group Id
+    Type: String
+
+  SSHKeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+
+Resources:
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP/8080 access via user defined port
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          FromPort: 80
+          IpProtocol: tcp
+          ToPort: 80
+        - CidrIp: 0.0.0.0/0
+          FromPort: 8080
+          IpProtocol: tcp
+          ToPort: 8080
+
+  JenkinsInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: !Ref AMIId
+      KeyName: !Ref SSHKeyName
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          GroupSet:
+            - !Ref WebSecurityGroup
+            - !Ref SSHSecurityGroupId
+          SubnetId: !Ref DevOpsSubnetId
+      UserData:
+        'Fn::Base64':
+          !Sub |
+            #!/bin/bash
+            exec &> /var/log/user-data.log
+
+            sudo yum update -y
+
+            # Install java
+            sudo yum install java-1.8.0 -y
+
+            # install jenkins
+            sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo
+            sudo rpm --import http://pkg.jenkins-ci.org/redhat/jenkins-ci.org.key
+            sudo yum install jenkins -y
+            sudo service jenkins start
+      Tags:
+        - Key: Name
+          Value: Jenkins
+        - Key: Type
+          Value: Devops tools
+
+  AnsibleInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: !Ref AMIId
+      KeyName: !Ref SSHKeyName
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          GroupSet:
+            - !Ref SSHSecurityGroupId
+          SubnetId: !Ref DevOpsSubnetId
+      UserData:
+        'Fn::Base64':
+          !Sub |
+            #!/bin/bash
+            exec &> /var/log/user-data.log
+
+            sudo yum update -y
+
+            # install ansible
+            sudo amazon-linux-extras install ansible2 -y
+
+      Tags:
+        - Key: Name
+          Value: Ansible
+        - Key: Type
+          Value: Devops tools
+
+  WebAppInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: !Ref AMIId
+      KeyName: !Ref SSHKeyName
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          GroupSet:
+            - !Ref WebSecurityGroup
+            - !Ref SSHSecurityGroupId
+          SubnetId: !Ref WebAppSubnetId
+      UserData:
+        'Fn::Base64':
+          !Sub |
+            #!/bin/bash
+            exec &> /var/log/user-data.log
+
+            sudo yum update -y
+
+            # Install jdk8
+            sudo mkdir /opt/java
+            wget -O /tmp/jdk-8u131-linux-x64.tar.gz --no-cookies --no-check-certificate \
+                --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz"
+            sudo tar -zxpvf /tmp/jdk-8u131-linux-x64.tar.gz -C /opt/java
+            sudo chown ec2-user: -R /opt/java
+
+            # install tomacat
+            sudo mkdir /opt/tomcat
+            wget -O /tmp/apache-tomcat-9.0.30.tar.gz http://www-eu.apache.org/dist/tomcat/tomcat-9/v9.0.30/bin/apache-tomcat-9.0.30.tar.gz
+            sudo tar -zxpvf /tmp/apache-tomcat-9.0.30.tar.gz -C /opt/tomcat
+            sudo ln -s /opt/tomcat/apache-tomcat-9.0.30 /opt/tomcat/latest
+            sudo chown ec2-user: -R /opt/tomcat
+            sudo chmod +x /opt/tomcat/latest/bin/*.sh
+
+            # Tomcat service
+            cat <<EOF>> /etc/systemd/system/tomcat.service
+              [Unit]
+              Description=Tomcat 9 servlet container
+              After=network.target
+
+              [Service]
+              Type=forking
+
+              Environment="JAVA_HOME=/opt/java/jdk1.8.0_131"
+              Environment="JAVA_OPTS=-Djava.security.egd=file:///dev/urandom"
+
+              Environment="CATALINA_BASE=/opt/tomcat/latest"
+              Environment="CATALINA_HOME=/opt/tomcat/latest"
+              Environment="CATALINA_PID=/opt/tomcat/latest/temp/tomcat.pid"
+              Environment="CATALINA_OPTS=-Xms512M -Xmx1024M -server -XX:+UseParallelGC"
+
+              ExecStart=/opt/tomcat/latest/bin/startup.sh
+              ExecStop=/opt/tomcat/latest/bin/shutdown.sh
+
+              [Install]
+              WantedBy=multi-user.target
+            EOF
+
+            sudo systemctl daemon-reload
+            sudo service tomcat start
+
+      Tags:
+        - Key: Name
+          Value: Tomcat Server
+        - Key: Type
+          Value: DEV
+
+Outputs:
+  JenkinsInstanceURL:
+    Description: URL of Jenkins host
+    Value: !Join
+      - ''
+      - - 'http://'
+        - !GetAtt
+          - JenkinsInstance
+          - PublicDnsName
+
+  AnsibleInstanceDNS:
+    Description: DNS of Ansible host
+    Value: !GetAtt [JenkinsInstance, PublicDnsName]
+
+  WebAppInstanceURL:
+    Description: URL of webapp host
+    Value: !Join
+      - ''
+      - - 'http://'
+        - !GetAtt
+          - WebAppInstance
+          - PublicDnsName

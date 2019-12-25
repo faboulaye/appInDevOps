@@ -1,0 +1,22 @@
+[
+    {
+      "ParameterKey": "VPCId",
+      "ParameterValue": "vpc-03c4e3661ca5439f7"
+    },
+    {
+      "ParameterKey": "DevOpsSubnetId",
+      "ParameterValue": "subnet-0e1a5686bb0888b5e"
+    },
+    {
+        "ParameterKey": "WebAppSubnetId",
+        "ParameterValue": "subnet-0d2d96f673e6b70f0"
+    },
+    {
+        "ParameterKey": "SSHSecurityGroupId",
+        "ParameterValue": "sg-00c97d4b776fa2659"
+    },
+    {
+        "ParameterKey": "SSHKeyName",
+        "ParameterValue": "faboulaye_poc"
+    }
+  ]
