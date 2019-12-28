@@ -20,7 +20,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git(credentialsId: $env.GITHUB_CREDENTIALS, url: 'https://github.com/faboulaye/appInDevOps.git')
+                git(credentialsId: $GITHUB_CREDENTIALS, url: 'https://github.com/faboulaye/appInDevOps.git')
             }
         }
 
