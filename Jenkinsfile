@@ -4,19 +4,26 @@ pipeline {
 
     agent any
 
+    tools {
+        maven 'M3'
+    }
+
     options {
         buildDiscarder(logRotator(numToKeepStr:'3'))
         timeout(time: 1, unit: 'HOURS')
     }
 
-    tools {
-        maven 'M3'
+    environment {
+        GITHUB_CREDENTIALS = '13e24678-e7ba-4618-961e-667ea5e4d1ac'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git credentialsId: '4b296352-0ec4-48ad-aa9c-863188e1aaf0', url: 'https://gitlab.com/faboulaye/community-business.git'
+                git(
+                        credentialsId: $env.GITHUB_CREDENTIALS,
+                        url: 'https://github.com/faboulaye/appInDevOps.git',
+                        name: 'appInDevOps')
             }
         }
 
@@ -42,7 +49,13 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                echo "Deploy"
+                echo "Deploy on S3"
+            }
+        }
+
+        stage('Delivery') {
+            steps {
+                echo "Deploy on tomcat"
             }
         }
     }
