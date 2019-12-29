@@ -69,6 +69,13 @@ Resources:
             # Install java
             sudo yum install java-1.8.0 -y
 
+            # Install jdk8
+            sudo mkdir /opt/java
+            wget -O /tmp/jdk-8u131-linux-x64.tar.gz --no-cookies --no-check-certificate \
+                --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz"
+            sudo tar -zxpvf /tmp/jdk-8u131-linux-x64.tar.gz -C /opt/java
+            sudo chown ec2-user: -R /opt/java
+
             # install jenkins
             sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo
             sudo rpm --import https://pkg.jenkins.io/redhat/jenkins.io.key
